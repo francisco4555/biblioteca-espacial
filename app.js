@@ -66,30 +66,22 @@
     }
   }
 
-  // Sonido de hoja de papel (generado con Web Audio, sin archivos)
+  // "Clic" estilo rueda de iPod clásico (generado con Web Audio, sin archivos)
   let actx = null;
   function playFlip() {
     try {
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
       if (actx.state === 'suspended') actx.resume();
-      const t = actx.currentTime, dur = 0.32;
-      const buf = actx.createBuffer(1, actx.sampleRate * dur, actx.sampleRate);
+      const t = actx.currentTime, dur = 0.012;
+      const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * dur), actx.sampleRate);
       const d = buf.getChannelData(0);
-      for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+      for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / d.length, 6);
       const src = actx.createBufferSource(); src.buffer = buf;
-      const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.9;
-      bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(3800, t + dur);
-      const g = actx.createGain();
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.35, t + 0.04);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(bp).connect(g).connect(actx.destination);
-      src.start(t); src.stop(t + dur);
-      // pequeño "toc" grave al final
-      const o = actx.createOscillator(), og = actx.createGain();
-      o.frequency.setValueAtTime(180, t + 0.05); o.frequency.exponentialRampToValueAtTime(90, t + 0.15);
-      og.gain.setValueAtTime(0.0001, t + 0.05); og.gain.exponentialRampToValueAtTime(0.18, t + 0.06); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
-      o.connect(og).connect(actx.destination); o.start(t + 0.05); o.stop(t + 0.2);
+      const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+      const pk = actx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 4200; pk.Q.value = 3; pk.gain.value = 10;
+      const g = actx.createGain(); g.gain.value = 0.9;
+      src.connect(hp).connect(pk).connect(g).connect(actx.destination);
+      src.start(t);
     } catch (e) {}
   }
 
