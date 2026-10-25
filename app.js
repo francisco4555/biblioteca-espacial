@@ -66,23 +66,30 @@
     }
   }
 
-  // "Clic" estilo rueda de iPod clásico (generado con Web Audio, sin archivos)
-  let actx = null;
+  // "Clic" estilo rueda de iPod clásico. Se genera un WAV corto en memoria y se
+  // reproduce con <audio>, que en iPhone suena aunque esté en modo silencio.
+  const clickUrl = (() => {
+    const sr = 44100, len = Math.round(sr * 0.012), data = new Int16Array(len);
+    let prev = 0;
+    for (let k = 0; k < len; k++) {
+      const n = Math.random() * 2 - 1, hp = n - prev; prev = n;
+      const env = Math.pow(1 - k / len, 6);
+      const tone = Math.sin(2 * Math.PI * 4200 * k / sr) * 0.5;
+      data[k] = Math.max(-1, Math.min(1, (hp * 0.6 + tone) * env)) * 30000;
+    }
+    const buf = new ArrayBuffer(44 + len * 2), v = new DataView(buf);
+    const w = (o, str) => [...str].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    w(0, 'RIFF'); v.setUint32(4, 36 + len * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, len * 2, true);
+    data.forEach((x, i) => v.setInt16(44 + i * 2, x, true));
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  })();
+  const pool = Array.from({ length: 4 }, () => { const a = new Audio(clickUrl); a.preload = 'auto'; return a; });
+  let pi = 0;
   function playFlip() {
-    try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      if (actx.state === 'suspended') actx.resume();
-      const t = actx.currentTime, dur = 0.012;
-      const buf = actx.createBuffer(1, Math.ceil(actx.sampleRate * dur), actx.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let k = 0; k < d.length; k++) d[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / d.length, 6);
-      const src = actx.createBufferSource(); src.buffer = buf;
-      const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
-      const pk = actx.createBiquadFilter(); pk.type = 'peaking'; pk.frequency.value = 4200; pk.Q.value = 3; pk.gain.value = 10;
-      const g = actx.createGain(); g.gain.value = 0.9;
-      src.connect(hp).connect(pk).connect(g).connect(actx.destination);
-      src.start(t);
-    } catch (e) {}
+    try { const a = pool[pi++ % pool.length]; a.currentTime = 0; const p = a.play(); if (p) p.catch(() => {}); } catch (e) {}
   }
 
   function select(i) { if (i !== picked) playFlip(); picked = i; layout(); }
