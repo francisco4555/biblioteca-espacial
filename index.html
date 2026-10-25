@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biblioteca espacial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <span class="brand">BBL.V</span>
+  <span class="name">Biblioteca espacial</span>
+  <nav class="modes" aria-label="Vista">
+    <button type="button" data-mode="nube" class="on">Nube</button>
+    <button type="button" data-mode="anillo">Anillo</button>
+    <button type="button" data-mode="pila">Pila</button>
+  </nav>
+</header>
+
+<main id="stage" class="stage" aria-label="Libros"></main>
+
+<aside id="info" class="info" hidden>
+  <div class="info-l"><div class="muted" id="i-n"></div><div id="i-author"></div></div>
+  <div class="info-r">
+    <div class="muted" id="i-year"></div><div id="i-genre"></div>
+    <a href="#" id="i-open">Abrir libro →</a>
+  </div>
+  <button type="button" id="close" class="close" aria-label="Cerrar">×</button>
+</aside>
+
+<footer class="foot">
+  <span>12 LIBROS · COLECCIÓN 01</span>
+  <span id="hint">TOCA UN LIBRO PARA ENFOCARLO</span>
+</footer>
+<script src="books.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
